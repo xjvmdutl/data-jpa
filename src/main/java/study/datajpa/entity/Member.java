@@ -9,6 +9,11 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id","username","age"})
+@NamedQuery(
+        name = "Member.findByUsername",
+        query = "select m from Member m where m.username = : username"
+)
+@NamedEntityGraph(name = "Member.all",attributeNodes = @NamedAttributeNode("team"))
 public class Member {
     @Id
     @GeneratedValue
@@ -17,7 +22,7 @@ public class Member {
     private String username;
     private int age;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) //실무에서는 반드시 지연로딩
     @JoinColumn(name = "team_id")
     private Team team;
 
@@ -29,6 +34,11 @@ public class Member {
     */
     public Member(String username) {
         this.username = username;
+    }
+
+    public Member(String username, int age) {
+        this.username = username;
+        this.age = age;
     }
 
     public Member(String username, int age, Team team) {
