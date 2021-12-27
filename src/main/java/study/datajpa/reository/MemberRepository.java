@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member,Long> { //<엔티티, id 타입>
+public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepositoryCustom { //<엔티티, id 타입>
     //JpaRepository 인터페이스를 상속 받는다.
     //도메인 특화된 기능 구현
     //메소드 명을 보고 JPQL을 만들어 준다.

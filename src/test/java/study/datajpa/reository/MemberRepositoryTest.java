@@ -328,4 +328,9 @@ public class MemberRepositoryTest {
         List<Member> result = memberRepository.findLockByUsername("member1");
         //Jpa가 제공하는 Lock기능을 SpringDataJpa에서 쉽게 사용할수 있다.
     }
+
+    @Test
+    public void callCustom(){
+        List<Member> result = memberRepository.findMemberCustom();
+    }
 }
