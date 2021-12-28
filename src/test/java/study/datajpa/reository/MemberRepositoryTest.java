@@ -420,7 +420,11 @@ public class MemberRepositoryTest {
         em.clear();
 
         //when
-        Member result = memberRepository.findByNativeQuery("m1");
-        System.out.println(result);
+        Page<MemberProjection> result = memberRepository.findByNativeProjection(PageRequest.of(0,10));
+        List<MemberProjection> content = result.getContent();
+        for(MemberProjection memberProjection : content){
+            System.out.println("memberProjection = " + memberProjection.getUsername());
+            System.out.println("memberProjection = " + memberProjection.getTeamName());
+        }
     }
 }
