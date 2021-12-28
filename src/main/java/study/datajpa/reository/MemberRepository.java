@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepositoryCustom { //<엔티티, id 타입>
+public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepositoryCustom,JpaSpecificationExecutor<Member> { //<엔티티, id 타입>
     //JpaRepository 인터페이스를 상속 받는다.
     //도메인 특화된 기능 구현
     //메소드 명을 보고 JPQL을 만들어 준다.
@@ -87,4 +87,11 @@ public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepos
     //select for update 
     @Lock(LockModeType.PESSIMISTIC_WRITE) //JPA에서 제공하는 것이다
     List<Member> findLockByUsername(String username);
+
+    //List<UsernameOnly> findProjectionsByUsername(@Param("username") String username);
+    <T> List<T> findProjectionsByUsername(@Param("username") String username, Class<T> type);
+
+
+    @Query(value = "select * from member where username = ? ", nativeQuery = true)
+    Member findByNativeQuery(String username);
 }

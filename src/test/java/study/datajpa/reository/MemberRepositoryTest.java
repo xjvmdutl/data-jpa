@@ -4,10 +4,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
@@ -332,5 +330,97 @@ public class MemberRepositoryTest {
     @Test
     public void callCustom(){
         List<Member> result = memberRepository.findMemberCustom();
+    }
+
+    @Test
+    public void specBasic(){
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+
+        Member m1 = new Member("m1",0,teamA);
+        Member m2 = new Member("m2",0,teamA);
+        em.persist(m1);
+        em.persist(m2);
+
+        em.flush();
+        em.clear();
+
+        //when
+        Specification<Member> spec = MemberSpec.username("m1").and(MemberSpec.teamName("teamA"));
+        List<Member> result = memberRepository.findAll(spec);
+        Assertions.assertThat(result.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void QueryByExample(){
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1",0,teamA);
+        Member m2 = new Member("m2",0,teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        //Probe
+        Member member = new Member("m1");//앤티티 자체가 검색조건이 된다.
+        Team team = new Team("teamA"); //연관관계까지 고려는 해서 검색을 해준다.
+        member.setTeam(team);
+
+        ExampleMatcher matcher = ExampleMatcher.matching() //OUTER 조인은 안된다.
+                .withIgnorePaths("age");//age속성은 무시한다.
+        Example<Member> example = Example.of(member,matcher); //prev 타입은 무시해야된다.
+
+        List<Member> result = memberRepository.findAll(example);
+        Assertions.assertThat(result.get(0).getUsername()).isEqualTo("m1");
+    }
+
+    @Test
+    public void projections(){
+        //given
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1",0,teamA);
+        Member m2 = new Member("m2",0,teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        //내가 원하는 데이터만 찍어서 가지고 올때 프록시 기술을 사용하여 필요한 값만 가지고 온다
+        /*
+        List<UsernameOnly> result = memberRepository.findProjectionsByUsername("m1");
+        for(UsernameOnly usernameOnly : result) //인터페이스 가지고 구현체를 만들어 반환해준다.
+            System.out.println("usernameOnly = " + usernameOnly.getUsername());
+        */
+
+        //구체적인 클래스를 명시했기 때문에 프록시패턴을 사용하는 것이 아니라 값을 넣어주는것이다.
+        List<NestedClosedProjections> result = memberRepository.findProjectionsByUsername("m1",NestedClosedProjections.class);
+        for(NestedClosedProjections nestedClosedProjections : result) {//인터페이스 가지고 구현체를 만들어 반환해준다.
+            String username = nestedClosedProjections.getUsername();
+            System.out.println("username = " + username);
+            String teamName = nestedClosedProjections.getTeam().getName();
+            System.out.println("teamName = " + teamName);
+        }
+    }
+
+    @Test
+    public void nativeQuery(){
+        Team teamA = new Team("teamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1",0,teamA);
+        Member m2 = new Member("m2",0,teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        Member result = memberRepository.findByNativeQuery("m1");
+        System.out.println(result);
     }
 }
